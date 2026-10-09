@@ -6,7 +6,7 @@ import {
   Scale, 
   X
 } from 'lucide-react';
-import { mockLegalUpdates } from '../../data/mockData';
+import { legalUpdates } from '../../data/emptyData';
 import type { LegalUpdate } from '../../types';
 
 export const LegalUpdatesPage: React.FC = () => {
@@ -23,7 +23,7 @@ export const LegalUpdatesPage: React.FC = () => {
     'Notifications'
   ];
 
-  const filteredUpdates = mockLegalUpdates.filter(item => {
+  const filteredUpdates = legalUpdates.filter(item => {
     const matchesCategory = activeCategory === 'All' || item.category === activeCategory;
     const matchesSearch = 
       item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -113,6 +113,7 @@ export const LegalUpdatesPage: React.FC = () => {
             </div>
           </div>
         ))}
+        {filteredUpdates.length === 0 && <div className="card" style={{ padding: '2rem', textAlign: 'center' }}>No legal updates are available.</div>}
       </div>
 
       {/* Full Update Detail Modal */}

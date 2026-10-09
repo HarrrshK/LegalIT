@@ -1,11 +1,14 @@
 {
-  "name": "legal-workflow",
+  "name": "legalit",
   "private": true,
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "concurrently --kill-others --names API,WEB --prefix-colors yellow,cyan \"npm:api\" \"npm:client\"",
+    "client": "vite",
     "api": "node server/index.mjs",
+    "account:create": "node server/manage-accounts.mjs create",
+    "data:reset": "node server/manage-accounts.mjs reset",
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "preview": "vite preview"
@@ -20,6 +23,7 @@
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.7",
     "@vitejs/plugin-react": "^6.1.1",
+    "concurrently": "^9.2.5",
     "oxlint": "^1.81.0",
     "typescript": "~6.0.2",
     "vite": "^8.3.0"

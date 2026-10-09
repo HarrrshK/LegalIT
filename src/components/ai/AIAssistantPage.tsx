@@ -17,11 +17,13 @@ import type { AIChatMessage } from '../../types';
 interface AIAssistantPageProps {
   initialQuery?: string;
   onNavigateTab: (tab: string) => void;
+  userName: string;
 }
 
 export const AIAssistantPage: React.FC<AIAssistantPageProps> = ({
   initialQuery,
-  onNavigateTab
+  onNavigateTab,
+  userName
 }) => {
   const [messages, setMessages] = useState<AIChatMessage[]>([]);
   const [inputQuery, setInputQuery] = useState('');
@@ -123,7 +125,7 @@ export const AIAssistantPage: React.FC<AIAssistantPageProps> = ({
 
               <div className="bubble-content">
                 <div className="bubble-meta">
-                  <span className="sender-name">{msg.sender === 'user' ? 'Ananya Sharma' : 'JurisAI Assistant'}</span>
+                  <span className="sender-name">{msg.sender === 'user' ? userName : 'JurisAI Assistant'}</span>
                   <span className="msg-time">{msg.timestamp}</span>
                 </div>
 

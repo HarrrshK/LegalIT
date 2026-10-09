@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { Calendar, Clock, MapPin, Scale } from 'lucide-react';
-import { mockCases } from '../../data/mockData';
+import type { LegalCase } from '../../types';
 
-export const HearingsPage: React.FC = () => {
+export const HearingsPage: React.FC<{ cases: LegalCase[] }> = ({ cases }) => {
   const [filterStatus, setFilterStatus] = useState<string>('All');
 
-  const allHearings = mockCases.flatMap(c => c.hearings);
+  const allHearings = cases.flatMap(c => c.hearings);
 
   const filteredHearings = allHearings.filter(h => {
     if (filterStatus === 'All') return true;
@@ -87,6 +87,7 @@ export const HearingsPage: React.FC = () => {
             </div>
           </div>
         ))}
+        {filteredHearings.length === 0 && <div className="card" style={{ padding: '2rem', textAlign: 'center' }}>No hearings are scheduled.</div>}
       </div>
 
       <style>{`

@@ -8,22 +8,23 @@ import {
   CheckCircle,
   X
 } from 'lucide-react';
-import { mockCases } from '../../data/mockData';
-import type { LegalDocument } from '../../types';
+import type { LegalCase, LegalDocument } from '../../types';
 
 interface DocumentsPageProps {
   onPreviewDocument: (doc: LegalDocument) => void;
+  cases: LegalCase[];
 }
 
 export const DocumentsPage: React.FC<DocumentsPageProps> = ({
-  onPreviewDocument
+  onPreviewDocument,
+  cases
 }) => {
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [uploadSuccess, setUploadSuccess] = useState(false);
 
-  const allDocs = mockCases.flatMap(c => c.documents);
+  const allDocs = cases.flatMap(c => c.documents);
   const categories = ['All', 'Pleading', 'Court Order', 'Affidavit', 'Evidence', 'Vakalatnama'];
 
   const filteredDocs = allDocs.filter(doc => {
@@ -41,7 +42,6 @@ export const DocumentsPage: React.FC<DocumentsPageProps> = ({
     setTimeout(() => {
       setUploadSuccess(false);
       setShowUploadModal(false);
-      alert('Document uploaded successfully to your vault and notified to Adv. Rajesh Verma!');
     }, 1200);
   };
 
@@ -137,6 +137,7 @@ export const DocumentsPage: React.FC<DocumentsPageProps> = ({
                   </td>
                 </tr>
               ))}
+              {filteredDocs.length === 0 && <tr><td colSpan={7} style={{ textAlign: 'center', padding: '2rem' }}>No documents have been uploaded.</td></tr>}
             </tbody>
           </table>
         </div>
@@ -165,7 +166,8 @@ export const DocumentsPage: React.FC<DocumentsPageProps> = ({
                   <div className="input-group">
                     <label className="input-label">Select Associated Case</label>
                     <select className="input-field" required>
-                      {mockCases.map(c => (
+                      <option value="">Select a case</option>
+                      {cases.map(c => (
                         <option key={c.id} value={c.id}>{c.title} ({c.cnrNumber})</option>
                       ))}
                     </select>

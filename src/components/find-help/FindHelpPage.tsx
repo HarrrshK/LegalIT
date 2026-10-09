@@ -9,10 +9,9 @@ import {
   CheckCircle, 
   X
 } from 'lucide-react';
-import { mockLawyersDirectory } from '../../data/mockData';
 import type { Lawyer, LegalDomain } from '../../types';
 
-export const FindHelpPage: React.FC = () => {
+export const FindHelpPage: React.FC<{ lawyers: Lawyer[] }> = ({ lawyers }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSpecialization, setSelectedSpecialization] = useState<string>('All');
   const [maxDistance, setMaxDistance] = useState<number>(50);
@@ -36,7 +35,7 @@ export const FindHelpPage: React.FC = () => {
     'Intellectual Property'
   ];
 
-  const filteredLawyers = mockLawyersDirectory.filter(lawyer => {
+  const filteredLawyers = lawyers.filter(lawyer => {
     const matchesSearch = 
       lawyer.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       lawyer.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -188,6 +187,7 @@ export const FindHelpPage: React.FC = () => {
             </div>
           </div>
         ))}
+        {filteredLawyers.length === 0 && <div className="card" style={{ padding: '2rem', textAlign: 'center' }}>No legal professionals are listed.</div>}
       </div>
 
       {/* Consultation Booking Modal */}

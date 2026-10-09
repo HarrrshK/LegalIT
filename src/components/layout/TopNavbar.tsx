@@ -14,7 +14,7 @@ import {
   Calendar,
   FileText
 } from 'lucide-react';
-import { mockClientProfile, mockNotifications } from '../../data/mockData';
+import { notifications as initialNotifications } from '../../data/emptyData';
 import type { NotificationItem, AuthUser } from '../../types';
 
 interface TopNavbarProps {
@@ -39,7 +39,7 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
 }) => {
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
-  const [notifications, setNotifications] = useState<NotificationItem[]>(mockNotifications);
+  const [notifications, setNotifications] = useState<NotificationItem[]>(initialNotifications);
 
   const unreadCount = notifications.filter(n => !n.read).length;
 
@@ -155,11 +155,7 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
               setShowNotifications(false);
             }}
           >
-            <img 
-              src={mockClientProfile.avatarUrl} 
-              alt={mockClientProfile.name} 
-              className="profile-avatar"
-            />
+            <div className="profile-avatar">{authUser.fullName.slice(0, 1).toUpperCase()}</div>
             <div className="profile-info">
               <span className="profile-name">{authUser.fullName}</span>
               <span className="profile-id">{authUser.userId}</span>
@@ -170,7 +166,7 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
           {showProfileMenu && (
             <div className="popover-dropdown profile-dropdown">
               <div className="profile-dropdown-header">
-                <img src={mockClientProfile.avatarUrl} alt="" className="avatar-lg" />
+                <div className="avatar-lg">{authUser.fullName.slice(0, 1).toUpperCase()}</div>
                 <div>
                   <div className="p-name">{authUser.fullName}</div>
                   <div className="p-email">{authUser.email}</div>

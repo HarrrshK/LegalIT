@@ -1,4 +1,4 @@
-export type CaseStatus = 'Active' | 'In Hearing' | 'Judgment Reserved' | 'Disposed' | 'Pending Notice';
+export type CaseStatus = 'Pending Review' | 'Accepted' | 'Rejected' | 'Active' | 'In Hearing' | 'Judgment Reserved' | 'Disposed' | 'Pending Notice';
 
 export type UserRole = 'client' | 'lawyer' | 'admin';
 

@@ -46,7 +46,7 @@ export function AuthPage({ onAuthenticated }: AuthPageProps) {
   return (
     <main className="auth-shell">
       <aside className="auth-story">
-        <div className="auth-brand"><span className="auth-brand-mark"><Scale size={22} /></span><span>NyayaFlow</span></div>
+        <div className="auth-brand"><span className="auth-brand-mark"><Scale size={22} /></span><span>LegalIt</span></div>
         <div className="auth-story-copy">
           <span className="auth-eyebrow"><Sparkles size={14} /> A clearer way to manage legal work</span>
           <h1>Your legal matters,<br /><em>in good hands.</em></h1>
@@ -57,12 +57,12 @@ export function AuthPage({ onAuthenticated }: AuthPageProps) {
       </aside>
 
       <section className="auth-panel">
-        <div className="auth-mobile-brand"><Scale size={20} /> NyayaFlow</div>
+        <div className="auth-mobile-brand"><Scale size={20} /> LegalIt</div>
         <div className="auth-form-wrap">
           <div className="auth-heading">
             <span className="auth-kicker">{mode === 'login' ? 'WELCOME BACK' : 'GET STARTED'}</span>
             <h2>{mode === 'login' ? 'Sign in to your portal' : 'Create your account'}</h2>
-            <p>{mode === 'login' ? 'Enter your details to continue securely.' : 'Join NyayaFlow and keep your legal work in one place.'}</p>
+            <p>{mode === 'login' ? 'Enter your details to continue securely.' : 'Join LegalIt and keep your legal work in one place.'}</p>
           </div>
 
           <div className="auth-mode-tabs" role="tablist" aria-label="Account access">
@@ -84,7 +84,7 @@ export function AuthPage({ onAuthenticated }: AuthPageProps) {
           </form>
           <p className="auth-legal-note">By continuing, you agree to use this portal responsibly and protect the confidentiality of legal information.</p>
         </div>
-        <footer className="auth-panel-footer">© 2026 NyayaFlow <span>•</span> Secure legal workspace</footer>
+        <footer className="auth-panel-footer">© 2026 LegalIt <span>•</span> Secure legal workspace</footer>
       </section>
     </main>
   );

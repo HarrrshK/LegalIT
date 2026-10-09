@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, FileText, Download, ShieldCheck, Printer } from 'lucide-react';
+import { X, FileText, Download, ShieldCheck } from 'lucide-react';
 import type { LegalDocument } from '../../types';
 
 interface DocumentPreviewModalProps {
@@ -32,54 +32,25 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
         <div className="modal-body doc-preview-body">
           <div className="preview-watermark-bar">
             <ShieldCheck size={16} color="#059669" />
-            <span>Encrypted Legal Repository • Verified by High Court Registry E-Filing System</span>
+            <span>Document metadata</span>
           </div>
 
           <div className="document-sheet">
-            <div className="sheet-header">
-              <div className="court-seal-stamp">HIGH COURT OF DELHI</div>
-              <h4>BEFORE THE HON'BLE HIGH COURT OF DELHI AT NEW DELHI</h4>
-              <span className="sheet-cnr">IN THE MATTER OF: {document.caseTitle}</span>
-            </div>
-
+            <div className="sheet-header"><h4>{document.title}</h4><span className="sheet-cnr">{document.caseTitle}</span></div>
             <div className="sheet-body-text">
-              <p><strong>DOCUMENT TYPE:</strong> {document.category.toUpperCase()}</p>
-              <p><strong>DATE OF UPLOAD:</strong> {document.uploadDate}</p>
-              <p><strong>VERIFICATION STATUS:</strong> {document.status}</p>
-
-              <hr className="my-3" />
-
-              <p className="legal-prose">
-                <strong>MOST RESPECTFULLY SHOWETH:</strong><br />
-                1. That the accompanying {document.title} has been filed on behalf of the Plaintiff/Petitioner 
-                in compliance with Order 39 Rule 1 & 2 of the Code of Civil Procedure, 1908.<br /><br />
-                2. That the contents of paragraphs 1 to 14 of the accompanying application are true and correct to the best of 
-                knowledge and legal records maintained by lead counsel <strong>Adv. Rajesh Verma</strong>.<br /><br />
-                3. That the original allotment records and payment demand receipts issued by SkyLine Realty Developers Ltd. 
-                are annexed herewith as Exhibit P-1 to P-8.
-              </p>
-            </div>
-
-            <div className="sheet-footer">
-              <div className="sig-block">
-                <div className="sig-line">[Digital Signature Verified]</div>
-                <div className="sig-name">Ananya Sharma (Client/Petitioner)</div>
-              </div>
-              <div className="sig-block text-right">
-                <div className="sig-line">[Advocate Stamp]</div>
-                <div className="sig-name">Adv. Rajesh Verma (D/1482/2008)</div>
-              </div>
+              <p><strong>Document type:</strong> {document.category}</p>
+              <p><strong>Uploaded:</strong> {document.uploadDate}</p>
+              <p><strong>Uploaded by:</strong> {document.uploadedBy}</p>
+              <p><strong>Status:</strong> {document.status}</p>
+              {!document.downloadUrl && <p className="text-muted" style={{ marginTop: '1.5rem' }}>No file is attached to this record.</p>}
             </div>
           </div>
         </div>
 
         <div className="modal-footer">
-          <button className="btn btn-secondary" onClick={() => alert('Printing document mock...')}>
-            <Printer size={16} /> Print
-          </button>
-          <button className="btn btn-primary" onClick={() => alert(`Downloading file ${document.fileName}`)}>
+          {document.downloadUrl && <a className="btn btn-primary" href={document.downloadUrl} download={document.fileName}>
             <Download size={16} /> Download {document.fileName}
-          </button>
+          </a>}
         </div>
       </div>
 

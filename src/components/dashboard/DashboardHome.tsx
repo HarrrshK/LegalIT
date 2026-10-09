@@ -13,22 +13,29 @@ import {
   Scale, 
   ChevronRight
 } from 'lucide-react';
-import { mockCases, mockAssignedLawyer, mockLegalUpdates, mockClientProfile } from '../../data/mockData';
+import { legalUpdates } from '../../data/emptyData';
 import type { LegalCase } from '../../types';
 
 interface DashboardHomeProps {
   onNavigateTab: (tab: string, caseId?: string) => void;
   onSendAIQuery: (query: string) => void;
+  userName: string;
+  cases: LegalCase[];
+  role: 'client' | 'lawyer';
 }
 
 export const DashboardHome: React.FC<DashboardHomeProps> = ({
   onNavigateTab,
-  onSendAIQuery
+  onSendAIQuery,
+  userName,
+  cases,
+  role
 }) => {
   const [quickQuery, setQuickQuery] = useState('');
 
-  const nextHearingCase = mockCases.find(c => c.nextHearing);
+  const nextHearingCase = cases.find(c => c.nextHearing);
   const nextHearing = nextHearingCase?.nextHearing;
+  const assignedLawyer = cases.find(item => item.assignedLawyer)?.assignedLawyer || null;
 
   const handleAIQuerySubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,11 +51,11 @@ export const DashboardHome: React.FC<DashboardHomeProps> = ({
       <section className="welcome-banner">
         <div className="welcome-text">
           <div className="client-badge">
-            <ShieldCheck size={14} /> Verified Client Portal
+            <ShieldCheck size={14} /> {role === 'lawyer' ? 'Professional Workspace' : 'Verified Client Portal'}
           </div>
-          <h1>Welcome back, {mockClientProfile.name}</h1>
+          <h1>Welcome back, {userName}</h1>
           <p>
-            You have <strong>{mockCases.length} active legal matters</strong> in progress. 
+            You have <strong>{cases.length} {role === 'lawyer' ? 'assigned' : 'active'} legal matters</strong>. 
             {nextHearing && (
               <span> Next hearing scheduled for <strong>{nextHearing.date}</strong> at {nextHearing.courtName}.</span>
             )}
@@ -72,7 +79,7 @@ export const DashboardHome: React.FC<DashboardHomeProps> = ({
           </div>
           <div className="metric-data">
             <span className="metric-label">Active Cases</span>
-            <span className="metric-value">{mockCases.length}</span>
+            <span className="metric-value">{cases.length}</span>
             <span className="metric-sub text-success">All on schedule</span>
           </div>
         </div>
@@ -83,8 +90,8 @@ export const DashboardHome: React.FC<DashboardHomeProps> = ({
           </div>
           <div className="metric-data">
             <span className="metric-label">Upcoming Hearing</span>
-            <span className="metric-value">18 Oct</span>
-            <span className="metric-sub text-amber">High Court Courtroom 14</span>
+            <span className="metric-value">{nextHearing?.date || 'None'}</span>
+            <span className="metric-sub text-amber">{nextHearing?.courtName || 'No hearing scheduled'}</span>
           </div>
         </div>
 
@@ -94,8 +101,8 @@ export const DashboardHome: React.FC<DashboardHomeProps> = ({
           </div>
           <div className="metric-data">
             <span className="metric-label">Documents Vault</span>
-            <span className="metric-value">7 Documents</span>
-            <span className="metric-sub">Verified & Secure</span>
+            <span className="metric-value">0 Documents</span>
+            <span className="metric-sub">No documents uploaded</span>
           </div>
         </div>
 
@@ -105,8 +112,8 @@ export const DashboardHome: React.FC<DashboardHomeProps> = ({
           </div>
           <div className="metric-data">
             <span className="metric-label">AI Legal Queries</span>
-            <span className="metric-value">12 Asked</span>
-            <span className="metric-sub text-purple">100% Citations Cited</span>
+            <span className="metric-value">Available</span>
+            <span className="metric-sub text-purple">Start a new conversation</span>
           </div>
         </div>
       </section>
@@ -128,7 +135,7 @@ export const DashboardHome: React.FC<DashboardHomeProps> = ({
             </div>
 
             <div className="cases-stack">
-              {mockCases.map((caseItem: LegalCase) => (
+              {cases.map((caseItem: LegalCase) => (
                 <div key={caseItem.id} className="case-row-card">
                   <div className="case-row-header">
                     <div className="case-title-block">
@@ -182,6 +189,7 @@ export const DashboardHome: React.FC<DashboardHomeProps> = ({
                   </div>
                 </div>
               ))}
+              {cases.length === 0 && <div className="admin-empty">No cases have been added to your account.</div>}
             </div>
           </div>
 
@@ -245,7 +253,7 @@ export const DashboardHome: React.FC<DashboardHomeProps> = ({
                 </div>
                 <div>
                   <h4>Next Court Hearing</h4>
-                  <span className="text-muted text-xs">High Court of Delhi</span>
+                  <span className="text-muted text-xs">{nextHearing.courtName}</span>
                 </div>
               </div>
 
@@ -279,21 +287,21 @@ export const DashboardHome: React.FC<DashboardHomeProps> = ({
           )}
 
           {/* Assigned Lawyer Card */}
-          <div className="card lawyer-summary-card">
+          {assignedLawyer && <div className="card lawyer-summary-card">
             <div className="lawyer-card-header">
-              <img src={mockAssignedLawyer.photoUrl} alt="" className="lawyer-avatar" />
+              <img src={assignedLawyer.photoUrl} alt="" className="lawyer-avatar" />
               <div>
-                <h4>{mockAssignedLawyer.name}</h4>
-                <span className="text-xs text-muted">{mockAssignedLawyer.title}</span>
-                <div className="rating-pill">★ {mockAssignedLawyer.rating} ({mockAssignedLawyer.reviewCount} reviews)</div>
+                <h4>{assignedLawyer.name}</h4>
+                <span className="text-xs text-muted">{assignedLawyer.title}</span>
+                <div className="rating-pill">★ {assignedLawyer.rating} ({assignedLawyer.reviewCount} reviews)</div>
               </div>
             </div>
 
-            <p className="lawyer-bio">{mockAssignedLawyer.bio}</p>
+            <p className="lawyer-bio">{assignedLawyer.bio}</p>
 
             <div className="lawyer-meta-box">
-              <div>Bar Reg: <strong>{mockAssignedLawyer.barRegistration}</strong></div>
-              <div>Experience: <strong>{mockAssignedLawyer.experienceYears} Years</strong></div>
+              <div>Bar Reg: <strong>{assignedLawyer.barRegistration}</strong></div>
+              <div>Experience: <strong>{assignedLawyer.experienceYears} Years</strong></div>
             </div>
 
             <div className="lawyer-action-buttons">
@@ -310,7 +318,7 @@ export const DashboardHome: React.FC<DashboardHomeProps> = ({
                 <Phone size={14} /> Call Office
               </button>
             </div>
-          </div>
+          </div>}
 
           {/* Recent Legal Updates Stream */}
           <div className="card updates-summary-card">
@@ -325,7 +333,7 @@ export const DashboardHome: React.FC<DashboardHomeProps> = ({
             </div>
 
             <div className="updates-mini-list">
-              {mockLegalUpdates.slice(0, 2).map((item) => (
+              {legalUpdates.slice(0, 2).map((item) => (
                 <div 
                   key={item.id} 
                   className="mini-update-item"
@@ -339,6 +347,7 @@ export const DashboardHome: React.FC<DashboardHomeProps> = ({
                   <p className="mini-upd-summary">{item.summary}</p>
                 </div>
               ))}
+              {legalUpdates.length === 0 && <div className="admin-empty">No legal updates are available.</div>}
             </div>
           </div>
         </div>

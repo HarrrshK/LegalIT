@@ -1,17 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { Search, X, Briefcase, FileText, Calendar, UserCheck, Newspaper, ArrowRight } from 'lucide-react';
-import { mockCases, mockLegalUpdates, mockLawyersDirectory } from '../../data/mockData';
+import { legalUpdates, lawyers } from '../../data/emptyData';
+import type { LegalCase } from '../../types';
 
 interface QuickSearchModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSelectTab: (tab: string, caseId?: string) => void;
+  cases: LegalCase[];
 }
 
 export const QuickSearchModal: React.FC<QuickSearchModalProps> = ({
   isOpen,
   onClose,
-  onSelectTab
+  onSelectTab,
+  cases
 }) => {
   const [query, setQuery] = useState('');
 
@@ -33,30 +36,30 @@ export const QuickSearchModal: React.FC<QuickSearchModalProps> = ({
   const q = query.toLowerCase().trim();
 
   // Search filter across datasets
-  const matchingCases = mockCases.filter(c => 
+  const matchingCases = cases.filter(c => 
     c.title.toLowerCase().includes(q) || 
     c.cnrNumber.toLowerCase().includes(q) || 
     c.category.toLowerCase().includes(q)
   );
 
-  const matchingDocuments = mockCases.flatMap(c => c.documents).filter(d => 
+  const matchingDocuments = cases.flatMap(c => c.documents).filter(d => 
     d.title.toLowerCase().includes(q) || 
     d.fileName.toLowerCase().includes(q) || 
     d.category.toLowerCase().includes(q)
   );
 
-  const matchingHearings = mockCases.flatMap(c => c.hearings).filter(h => 
+  const matchingHearings = cases.flatMap(c => c.hearings).filter(h => 
     h.caseTitle.toLowerCase().includes(q) || 
     h.courtName.toLowerCase().includes(q) ||
     h.stage.toLowerCase().includes(q)
   );
 
-  const matchingLawyers = mockLawyersDirectory.filter(l => 
+  const matchingLawyers = lawyers.filter(l => 
     l.name.toLowerCase().includes(q) || 
     l.specializations.some(s => s.toLowerCase().includes(q))
   );
 
-  const matchingUpdates = mockLegalUpdates.filter(u => 
+  const matchingUpdates = legalUpdates.filter(u => 
     u.title.toLowerCase().includes(q) || 
     u.summary.toLowerCase().includes(q) ||
     u.category.toLowerCase().includes(q)
@@ -91,7 +94,7 @@ export const QuickSearchModal: React.FC<QuickSearchModalProps> = ({
           {query === '' ? (
             <div className="search-empty-state">
               <span className="empty-title">Quick Search</span>
-              <p>Type keywords like "Skyline", "Property", "Rajesh", "Injunction", or "Supreme Court"</p>
+              <p>Search your cases, documents, hearings, legal professionals, and updates.</p>
             </div>
           ) : !hasResults ? (
             <div className="search-empty-state">

@@ -1,35 +1,72 @@
-# NyayaFlow
+# LegalIt
 
-NyayaFlow is a React and TypeScript legal portal prototype with a Node.js API for account access, administrator provisioning, audit events, and Groq-powered legal information answers.
+LegalIt is a React and TypeScript legal portal prototype with a Node.js API for account access, administrator provisioning, audit events, and Groq-powered legal information answers.
 
 ## Run locally
 
 Requires Node.js 20 or newer.
 
-Open two terminals in the project folder:
+### Windows one-click setup
 
-1. Start the API. Set a unique administrator email and a password with at least 16 characters. Add the Groq key if you want the AI assistant enabled.
+Install Node.js 20 or newer, extract the project folder, and double-click `install.bat`. On the first run it asks for a Groq API key, creates the private `.env` file, installs dependencies, starts both servers, and opens LegalIt in the default browser. Later runs reuse the existing `.env`.
 
-   ```bash
-   ADMIN_EMAIL=admin@example.com ADMIN_PASSWORD='use-a-long-unique-password-here' GROQ_API_KEY='your-groq-api-key' npm run api
-   ```
+Never send a populated `.env` file to someone else. Each installation should use its own Groq key.
 
-   The first run provisions the administrator. Its credentials are stored as a password hash in `data/store.json`. Keep this file private and backed up. The API defaults to port 3001.
+Start the complete app from the project folder:
 
-2. Start the frontend:
+```bash
+npm run dev
+```
 
-   ```bash
-   npm run dev
-   ```
+This starts both the frontend and the account API. Open the local URL printed next to `WEB`. Client registration and sign-in work without any environment setup.
 
-   Open the local URL printed by Vite. Vite forwards `/api` requests to the API on port 3001.
+To include an administrator account, set a unique administrator email and a password with at least 16 characters before starting the app. Add the Groq key if you want the AI assistant enabled.
+
+```bash
+ADMIN_EMAIL=admin@example.com ADMIN_PASSWORD='use-a-long-unique-password-here' GROQ_API_KEY='your-groq-api-key' npm run dev
+```
+
+The first run provisions the administrator. Its credentials are stored as a password hash in `data/store.json`. Keep this file private and backed up. The API defaults to port 3001.
+
+For frontend-only work, use:
+
+```bash
+npm run client
+```
+
+## Account commands
+
+Stop the app before using these commands so the running API cannot overwrite the data file.
+
+Create an active client account and print its generated user ID and temporary password:
+
+```bash
+npm run account:create -- --role client --name "Client Name" --email "client@example.com"
+```
+
+Create an active legal professional account:
+
+```bash
+npm run account:create -- --role lawyer --name "Lawyer Name" --email "lawyer@example.com"
+```
+
+Both account types must replace the temporary password on first sign-in. To erase every local account and audit event:
+
+```bash
+npm run data:reset -- --yes
+```
+
+After a reset, restart the app. An administrator account will be recreated only when `ADMIN_EMAIL` and `ADMIN_PASSWORD` are supplied.
 
 To build the static frontend, run `npm run build`. The API runs separately with `npm run api`.
 
 ## Accounts and permissions
 
 - Clients can register and sign in with email or their generated user ID.
-- Legal professionals can register, but their accounts wait for administrator approval.
+- Clients and legal professionals can register and sign in immediately.
+- Clients can describe an issue, use the configured AI service to prepare an editable case draft, select an active legal professional, and submit the case.
+- A submitted case is persisted and appears in both the creating client's workspace and the selected legal professional's workspace.
+- Legal professionals use the full dashboard and can accept or reject cases assigned to them. Decisions are persisted, added to the case timeline, and shown to the client.
 - An authenticated administrator can issue client or professional accounts, receive a one-time user ID and temporary password, suspend or restore accounts, and review the audit log.
 - Issued passwords must be changed at first sign-in.
 - The first administrator is created from server environment variables; there is no hidden master password or browser-side admin bypass.
@@ -41,4 +78,4 @@ The browser sends questions to `/api/ai/chat`. The server calls Groq using `GROQ
 
 ## Current limitations
 
-The account and audit store is a local JSON file for development, not a multi-instance production database. Existing case, hearing, lawyer, document, and notification pages still use sample data from `src/data/mockData.ts`; the client and lawyer workspaces are not yet backed by real case-management records. Lawyer registration approval and account issuance are available, but full lawyer workflows are not implemented. Before storing real client information, replace the JSON store with a transactional database, add durable shared sessions, rate limiting, password reset and recovery, verified email, backups, monitoring, malware scanning and private document storage, and review deployment security and applicable privacy obligations.
+The account, audit, and case store is a local JSON file for development, not a multi-instance production database. New accounts start with no cases, documents, hearings, assigned lawyers, notifications, or messages. Administrators can persist a case and link it to a client and legal professional; linked cases appear in both workspaces. Document file storage, hearing editing, messaging, and consultation booking are not yet implemented. Before storing real client information, replace the JSON store with a transactional database, add durable shared sessions, rate limiting, password reset and recovery, verified email, backups, monitoring, malware scanning and private document storage, and review deployment security and applicable privacy obligations.

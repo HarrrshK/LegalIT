@@ -13,31 +13,52 @@ import {
   Download, 
   Eye, 
   MessageSquare,
-  ChevronRight
+  ChevronRight,
+  Plus,
+  Sparkles,
+  X
 } from 'lucide-react';
-import { mockCases } from '../../data/mockData';
-import type { LegalDocument } from '../../types';
+import type { LegalCase, LegalDocument, Lawyer } from '../../types';
 
 interface MyCasesPageProps {
   initialCaseId?: string;
   onNavigateTab: (tab: string) => void;
   onPreviewDocument: (doc: LegalDocument) => void;
+  cases: LegalCase[];
+  lawyers: Lawyer[];
+  onCasesChanged: () => void;
+  role: 'client' | 'lawyer';
 }
 
 export const MyCasesPage: React.FC<MyCasesPageProps> = ({
   initialCaseId,
   onNavigateTab,
-  onPreviewDocument
+  onPreviewDocument,
+  cases,
+  lawyers,
+  onCasesChanged,
+  role
 }) => {
   const [selectedCaseId, setSelectedCaseId] = useState<string | null>(initialCaseId || null);
   const [activeCategory, setActiveCategory] = useState<string>('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [activeDetailTab, setActiveDetailTab] = useState<'overview' | 'timeline' | 'documents' | 'hearings' | 'lawyer'>('overview');
+  const [showCreate, setShowCreate] = useState(false);
+  const [issue, setIssue] = useState('');
+  const [drafting, setDrafting] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [formError, setFormError] = useState('');
+  const [decisionBusy, setDecisionBusy] = useState<string | null>(null);
+  const [caseForm, setCaseForm] = useState({ title: '', category: 'Civil Dispute', opposingParty: '', courtName: '', summary: '', lawyerUserId: '' });
 
-  const selectedCase = mockCases.find(c => c.id === selectedCaseId);
+  const createAiDraft = async () => { setDrafting(true); setFormError(''); try { const response = await fetch('/api/ai/case-intake', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ description: issue }) }); const body = await response.json(); if (!response.ok) throw new Error(body.error || 'Could not create a draft.'); setCaseForm(current => ({ ...current, ...body.draft })); } catch (reason) { setFormError(reason instanceof Error ? reason.message : 'Could not create a draft.'); } finally { setDrafting(false); } };
+  const submitCase = async (event: React.FormEvent) => { event.preventDefault(); setSaving(true); setFormError(''); try { const response = await fetch('/api/cases', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(caseForm) }); const body = await response.json(); if (!response.ok) throw new Error(body.error || 'Could not create the case.'); setShowCreate(false); setIssue(''); setCaseForm({ title: '', category: 'Civil Dispute', opposingParty: '', courtName: '', summary: '', lawyerUserId: '' }); onCasesChanged(); setSelectedCaseId(body.case.id); } catch (reason) { setFormError(reason instanceof Error ? reason.message : 'Could not create the case.'); } finally { setSaving(false); } };
+  const decideCase = async (caseId: string, decision: 'accepted' | 'rejected') => { setDecisionBusy(caseId); setFormError(''); try { const response = await fetch(`/api/cases/${encodeURIComponent(caseId)}/decision`, { method: 'PATCH', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ decision }) }); const body = await response.json(); if (!response.ok) throw new Error(body.error || 'Could not update the case.'); onCasesChanged(); } catch (reason) { setFormError(reason instanceof Error ? reason.message : 'Could not update the case.'); } finally { setDecisionBusy(null); } };
+
+  const selectedCase = cases.find(c => c.id === selectedCaseId);
 
   // Filter cases
-  const filteredCases = mockCases.filter(c => {
+  const filteredCases = cases.filter(c => {
     const matchesCategory = activeCategory === 'All' || c.category === activeCategory;
     const matchesSearch = 
       c.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -52,12 +73,12 @@ export const MyCasesPage: React.FC<MyCasesPageProps> = ({
       {!selectedCase ? (
         <div className="page-header-flex">
           <div>
-            <h1>My Cases</h1>
-            <p className="text-muted">Track and manage your active and past legal proceedings</p>
+            <h1>{role === 'lawyer' ? 'Assigned Cases' : 'My Cases'}</h1>
+            <p className="text-muted">{role === 'lawyer' ? 'Review client requests and manage accepted matters' : 'Track and manage your active and past legal proceedings'}</p>
           </div>
-          <button className="btn btn-primary" onClick={() => onNavigateTab('ai-assistant')}>
-            Check Case Rights with AI
-          </button>
+          {role === 'client' && <button className="btn btn-primary" onClick={() => setShowCreate(true)}>
+            <Plus size={17} /> Create New Case
+          </button>}
         </div>
       ) : (
         <div className="case-detail-header">
@@ -155,9 +176,11 @@ export const MyCasesPage: React.FC<MyCasesPageProps> = ({
                   >
                     View Case File <ChevronRight size={16} />
                   </button>
+                  {role === 'lawyer' && c.status === 'Pending Review' && <><button className="btn btn-primary btn-sm flex-1" disabled={decisionBusy === c.id} onClick={() => void decideCase(c.id, 'accepted')}>Accept case</button><button className="btn btn-secondary btn-sm flex-1" disabled={decisionBusy === c.id} onClick={() => void decideCase(c.id, 'rejected')}>Reject</button></>}
                 </div>
               </div>
             ))}
+            {filteredCases.length === 0 && <div className="card" style={{ padding: '2rem', textAlign: 'center' }}>No cases are linked to your account.</div>}
           </div>
         </>
       ) : (
@@ -441,6 +464,8 @@ export const MyCasesPage: React.FC<MyCasesPageProps> = ({
           )}
         </div>
       )}
+
+      {showCreate && <div className="modal-overlay" onClick={() => setShowCreate(false)}><div className="modal-content" onClick={event => event.stopPropagation()}><div className="modal-header"><div><h3>Create a new case</h3><span className="text-xs text-muted">Describe the issue, review the draft, and choose your legal professional.</span></div><button className="btn-icon" onClick={() => setShowCreate(false)}><X size={20} /></button></div><form className="modal-body form-stack" onSubmit={submitCase}><div className="input-group"><label className="input-label">Describe what happened</label><textarea className="input-field" rows={5} minLength={30} maxLength={6000} required value={issue} onChange={event => setIssue(event.target.value)} placeholder="Explain the events, people or organisations involved, dates you remember, what outcome you need, and whether anything is urgent." /></div><button type="button" className="btn btn-secondary" disabled={drafting || issue.trim().length < 30} onClick={() => void createAiDraft()}><Sparkles size={16} /> {drafting ? 'Creating draft…' : 'Create draft with AI'}</button><div className="input-group"><label className="input-label">Case title</label><input className="input-field" required minLength={3} value={caseForm.title} onChange={event => setCaseForm({ ...caseForm, title: event.target.value })} /></div><div className="input-group"><label className="input-label">Category</label><select className="input-field" value={caseForm.category} onChange={event => setCaseForm({ ...caseForm, category: event.target.value })}><option>Property &amp; Real Estate</option><option>Consumer Protection</option><option>Civil Dispute</option><option>Employment &amp; Contract</option><option>Family Law</option><option>Intellectual Property</option></select></div><div className="input-group"><label className="input-label">Other party</label><input className="input-field" value={caseForm.opposingParty} onChange={event => setCaseForm({ ...caseForm, opposingParty: event.target.value })} placeholder="Person or organisation, if known" /></div><div className="input-group"><label className="input-label">Court</label><input className="input-field" value={caseForm.courtName} onChange={event => setCaseForm({ ...caseForm, courtName: event.target.value })} placeholder="Leave blank if the case has not been filed" /></div><div className="input-group"><label className="input-label">Issue summary</label><textarea className="input-field" rows={5} required minLength={20} value={caseForm.summary} onChange={event => setCaseForm({ ...caseForm, summary: event.target.value })} /></div><div className="input-group"><label className="input-label">Choose a legal professional</label><select className="input-field" required value={caseForm.lawyerUserId} onChange={event => setCaseForm({ ...caseForm, lawyerUserId: event.target.value })}><option value="">Select a legal professional</option>{lawyers.map(lawyer => <option key={lawyer.id} value={lawyer.id}>{lawyer.name}{lawyer.email ? ` · ${lawyer.email}` : ''}</option>)}</select>{lawyers.length === 0 && <span className="text-xs text-muted">No active legal professional accounts are available yet.</span>}</div>{formError && <div className="auth-error" role="alert">{formError}</div>}<div className="modal-footer"><button type="button" className="btn btn-secondary" onClick={() => setShowCreate(false)}>Cancel</button><button className="btn btn-primary" disabled={saving || lawyers.length === 0}>{saving ? 'Creating case…' : 'Create and send to lawyer'}</button></div></form></div></div>}
 
       <style>{`
         .cases-page {

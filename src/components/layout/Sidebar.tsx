@@ -14,7 +14,6 @@ import {
   ChevronLeft,
   ChevronRight
 } from 'lucide-react';
-import { mockCases } from '../../data/mockData';
 
 interface SidebarProps {
   activeTab: string;
@@ -23,6 +22,8 @@ interface SidebarProps {
   setIsOpen: (open: boolean) => void;
   isCollapsed: boolean;
   setIsCollapsed: (collapsed: boolean) => void;
+  caseCount: number;
+  role: 'client' | 'lawyer';
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -31,15 +32,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
   isOpen,
   setIsOpen,
   isCollapsed,
-  setIsCollapsed
+  setIsCollapsed,
+  caseCount,
+  role
 }) => {
-  const activeCasesCount = mockCases.filter(c => c.status !== 'Disposed').length;
-
-  const navItems = [
+  const navItems: { id: string; label: string; icon: React.ComponentType<{ size?: number; className?: string }>; badge?: string; highlight?: string }[] = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { id: 'cases', label: 'My Cases', icon: Briefcase, badge: activeCasesCount.toString() },
-    { id: 'documents', label: 'Documents', icon: FileText, badge: '7' },
-    { id: 'hearings', label: 'Hearings', icon: Calendar, badge: '3' },
+    { id: 'cases', label: 'My Cases', icon: Briefcase, badge: caseCount ? String(caseCount) : undefined },
+    { id: 'documents', label: 'Documents', icon: FileText },
+    { id: 'hearings', label: 'Hearings', icon: Calendar },
     { id: 'lawyer', label: 'My Lawyer', icon: UserCheck },
     { id: 'ai-assistant', label: 'AI Legal Assistant', icon: Bot, highlight: 'AI' },
     { id: 'updates', label: 'Legal Updates', icon: Newspaper, highlight: 'NEW' },
@@ -72,8 +73,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </div>
           {!isCollapsed && (
             <div className="brand-text">
-              <span className="brand-title">NyayaFlow</span>
-              <span className="brand-subtitle">Client Portal</span>
+              <span className="brand-title">LegalIt</span>
+              <span className="brand-subtitle">{role === 'lawyer' ? 'Professional Portal' : 'Client Portal'}</span>
             </div>
           )}
           <button 
@@ -87,7 +88,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
         {/* Navigation Items */}
         <nav className="sidebar-nav">
-          {navItems.map((item) => {
+          {navItems.filter(item => role === 'client' || !['lawyer', 'find-help'].includes(item.id)).map((item) => {
             const Icon = item.icon;
             const isActive = activeTab === item.id;
             return (

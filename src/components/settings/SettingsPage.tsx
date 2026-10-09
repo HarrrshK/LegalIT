@@ -1,17 +1,20 @@
 import React, { useState } from 'react';
 import { User, Bell, Moon, Sun, Save, Check } from 'lucide-react';
-import { mockClientProfile } from '../../data/mockData';
+import { emptyClientProfile } from '../../data/emptyData';
+import type { AuthUser } from '../../types';
 
 interface SettingsPageProps {
   theme: 'light' | 'dark';
   setTheme: (theme: 'light' | 'dark') => void;
+  authUser: AuthUser;
 }
 
 export const SettingsPage: React.FC<SettingsPageProps> = ({
   theme,
-  setTheme
+  setTheme,
+  authUser
 }) => {
-  const [profile, setProfile] = useState(mockClientProfile);
+  const [profile, setProfile] = useState({ ...emptyClientProfile, id: authUser.id, name: authUser.fullName, clientId: authUser.userId, email: authUser.email });
   const [isSaved, setIsSaved] = useState(false);
 
   const handleSave = (e: React.FormEvent) => {
@@ -25,7 +28,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
       <div className="page-header">
         <div>
           <h1>Account Settings & Preferences</h1>
-          <p className="text-muted">Manage your client profile, notification channels, security, and portal appearance</p>
+          <p className="text-muted">Manage your profile, notification channels, security, and portal appearance</p>
         </div>
       </div>
 
@@ -34,7 +37,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
         <div className="card">
           <div className="card-header-line">
             <User size={20} className="text-primary" />
-            <h3>Client Profile Information</h3>
+            <h3>Profile Information</h3>
           </div>
 
           <div className="form-grid mt-4">
