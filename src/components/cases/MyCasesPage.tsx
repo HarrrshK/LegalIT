@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { 
   Briefcase, 
   Search, 
@@ -19,6 +19,7 @@ import {
   X
 } from 'lucide-react';
 import type { LegalCase, LegalDocument, Lawyer } from '../../types';
+import { api, legalCase } from '../../lib/api';
 
 interface MyCasesPageProps {
   initialCaseId?: string;
@@ -42,7 +43,7 @@ export const MyCasesPage: React.FC<MyCasesPageProps> = ({
   const [selectedCaseId, setSelectedCaseId] = useState<string | null>(initialCaseId || null);
   const [activeCategory, setActiveCategory] = useState<string>('All');
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeDetailTab, setActiveDetailTab] = useState<'overview' | 'timeline' | 'documents' | 'hearings' | 'lawyer'>('overview');
+  const [activeDetailTab, setActiveDetailTab] = useState<'overview' | 'timeline' | 'documents' | 'hearings' | 'activity' | 'lawyer'>('overview');
   const [showCreate, setShowCreate] = useState(false);
   const [issue, setIssue] = useState('');
   const [drafting, setDrafting] = useState(false);
@@ -50,12 +51,23 @@ export const MyCasesPage: React.FC<MyCasesPageProps> = ({
   const [formError, setFormError] = useState('');
   const [decisionBusy, setDecisionBusy] = useState<string | null>(null);
   const [caseForm, setCaseForm] = useState({ title: '', category: 'Civil Dispute', opposingParty: '', courtName: '', summary: '', lawyerUserId: '' });
+  const [messages, setMessages] = useState<{ id: string; sender_user_id: string; body: string; created_at: string }[]>([]);
+  const [tasks, setTasks] = useState<{ id: string; title: string; due_at: string | null; priority: string; completed_at: string | null; client_visible: boolean }[]>([]);
+  const [notes, setNotes] = useState<{ id: string; content: string; client_visible: boolean; created_at: string }[]>([]);
+  const [messageText, setMessageText] = useState('');
+  const [taskTitle, setTaskTitle] = useState('');
+  const [noteText, setNoteText] = useState('');
 
-  const createAiDraft = async () => { setDrafting(true); setFormError(''); try { const response = await fetch('/api/ai/case-intake', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ description: issue }) }); const body = await response.json(); if (!response.ok) throw new Error(body.error || 'Could not create a draft.'); setCaseForm(current => ({ ...current, ...body.draft })); } catch (reason) { setFormError(reason instanceof Error ? reason.message : 'Could not create a draft.'); } finally { setDrafting(false); } };
-  const submitCase = async (event: React.FormEvent) => { event.preventDefault(); setSaving(true); setFormError(''); try { const response = await fetch('/api/cases', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(caseForm) }); const body = await response.json(); if (!response.ok) throw new Error(body.error || 'Could not create the case.'); setShowCreate(false); setIssue(''); setCaseForm({ title: '', category: 'Civil Dispute', opposingParty: '', courtName: '', summary: '', lawyerUserId: '' }); onCasesChanged(); setSelectedCaseId(body.case.id); } catch (reason) { setFormError(reason instanceof Error ? reason.message : 'Could not create the case.'); } finally { setSaving(false); } };
-  const decideCase = async (caseId: string, decision: 'accepted' | 'rejected') => { setDecisionBusy(caseId); setFormError(''); try { const response = await fetch(`/api/cases/${encodeURIComponent(caseId)}/decision`, { method: 'PATCH', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ decision }) }); const body = await response.json(); if (!response.ok) throw new Error(body.error || 'Could not update the case.'); onCasesChanged(); } catch (reason) { setFormError(reason instanceof Error ? reason.message : 'Could not update the case.'); } finally { setDecisionBusy(null); } };
+  const createAiDraft = async () => { setDrafting(true); setFormError(''); try { const body = await api<{ draft: { title: string; case_type: string; court_name: string | null; matter_summary: string } }>('/cases/intake/draft', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ description: issue }) }); setCaseForm(current => ({ ...current, title: body.draft.title, category: body.draft.case_type, courtName: body.draft.court_name || '', summary: body.draft.matter_summary })); } catch (reason) { setFormError(reason instanceof Error ? reason.message : 'Could not create a draft.'); } finally { setDrafting(false); } };
+  const submitCase = async (event: React.FormEvent) => { event.preventDefault(); setSaving(true); setFormError(''); try { const body = await api<Parameters<typeof legalCase>[0]>('/cases/intake', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ lawyer_user_id: caseForm.lawyerUserId, title: caseForm.title, case_type: caseForm.category, court_name: caseForm.courtName || null, matter_summary: caseForm.summary }) }); setShowCreate(false); setIssue(''); setCaseForm({ title: '', category: 'Civil Dispute', opposingParty: '', courtName: '', summary: '', lawyerUserId: '' }); onCasesChanged(); setSelectedCaseId(body.id); } catch (reason) { setFormError(reason instanceof Error ? reason.message : 'Could not create the case.'); } finally { setSaving(false); } };
+  const decideCase = async (caseId: string, decision: 'accepted' | 'rejected') => { setDecisionBusy(caseId); setFormError(''); try { await api(`/cases/${encodeURIComponent(caseId)}/decision`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ decision }) }); onCasesChanged(); } catch (reason) { setFormError(reason instanceof Error ? reason.message : 'Could not update the case.'); } finally { setDecisionBusy(null); } };
 
   const selectedCase = cases.find(c => c.id === selectedCaseId);
+  const loadActivity = async (caseId: string) => { const [storedMessages, storedTasks, storedNotes] = await Promise.all([api<typeof messages>(`/cases/${caseId}/messages`), api<typeof tasks>(`/cases/${caseId}/tasks`), api<typeof notes>(`/cases/${caseId}/notes`)]); setMessages(storedMessages); setTasks(storedTasks); setNotes(storedNotes); };
+  useEffect(() => { if (selectedCaseId) { const timer = window.setTimeout(() => void loadActivity(selectedCaseId).catch(() => undefined), 0); return () => window.clearTimeout(timer); } }, [selectedCaseId]);
+  const sendMessage = async () => { if (!selectedCaseId || !messageText.trim()) return; await api(`/cases/${selectedCaseId}/messages`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ body: messageText }) }); setMessageText(''); await loadActivity(selectedCaseId); };
+  const addTask = async () => { if (!selectedCaseId || !taskTitle.trim()) return; await api(`/cases/${selectedCaseId}/tasks`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title: taskTitle, priority: 'normal', client_visible: true }) }); setTaskTitle(''); await loadActivity(selectedCaseId); };
+  const addNote = async () => { if (!selectedCaseId || !noteText.trim()) return; await api(`/cases/${selectedCaseId}/notes`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ content: noteText, client_visible: true }) }); setNoteText(''); await loadActivity(selectedCaseId); };
 
   // Filter cases
   const filteredCases = cases.filter(c => {
@@ -218,6 +230,7 @@ export const MyCasesPage: React.FC<MyCasesPageProps> = ({
             >
               <UserCheck size={16} /> Lead Counsel
             </button>
+            <button className={`tab-button ${activeDetailTab === 'activity' ? 'active' : ''}`} onClick={() => setActiveDetailTab('activity')}><MessageSquare size={16} /> Activity</button>
           </div>
 
           {/* TAB 1: OVERVIEW */}
@@ -462,6 +475,7 @@ export const MyCasesPage: React.FC<MyCasesPageProps> = ({
               </div>
             </div>
           )}
+          {activeDetailTab === 'activity' && <div className="tab-pane"><div className="grid-2"><section className="card"><h3>Messages</h3><div className="admin-user-list">{messages.map(item => <div className="admin-user-row" key={item.id}><div className="admin-user-copy"><strong>{item.sender_user_id}</strong><span>{item.body}</span><small>{new Date(item.created_at).toLocaleString()}</small></div></div>)}{messages.length === 0 && <p className="admin-empty">No messages.</p>}</div><div className="action-flex mt-3"><input className="input-field" value={messageText} onChange={event => setMessageText(event.target.value)} placeholder="Write a case message" /><button className="btn btn-primary" onClick={() => void sendMessage()}>Send</button></div></section><section className="card"><h3>Tasks and shared updates</h3>{tasks.map(item => <div className="admin-user-row" key={item.id}><div className="admin-user-copy"><strong>{item.title}</strong><span>{item.priority}{item.due_at ? ` · due ${new Date(item.due_at).toLocaleString()}` : ''}</span></div><span className={`admin-status ${item.completed_at ? 'status-active' : 'status-pending'}`}>{item.completed_at ? 'complete' : 'open'}</span></div>)}{role === 'lawyer' && <div className="action-flex mt-3"><input className="input-field" value={taskTitle} onChange={event => setTaskTitle(event.target.value)} placeholder="New client-visible task" /><button className="btn btn-primary" onClick={() => void addTask()}>Add</button></div>}<h3 className="mt-4">Case updates</h3>{notes.map(item => <div className="admin-user-row" key={item.id}><div className="admin-user-copy"><span>{item.content}</span><small>{new Date(item.created_at).toLocaleString()}</small></div></div>)}{role === 'lawyer' && <div className="action-flex mt-3"><input className="input-field" value={noteText} onChange={event => setNoteText(event.target.value)} placeholder="New client-visible update" /><button className="btn btn-primary" onClick={() => void addNote()}>Post</button></div>}</section></div></div>}
         </div>
       )}
 

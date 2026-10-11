@@ -1,0 +1,16 @@
+import { useEffect, useState, type FormEvent } from 'react';
+import { Plus, UserRound } from 'lucide-react';
+import { api } from '../../lib/api';
+
+type ClientRecord = { id: string; linked_user_id: string | null; full_name: string; email: string | null; phone: string | null; city: string | null; professional_notes: string | null; archived_at: string | null };
+
+export function ClientsPage() {
+  const [items, setItems] = useState<ClientRecord[]>([]);
+  const [showForm, setShowForm] = useState(false);
+  const [form, setForm] = useState({ fullName: '', email: '', phone: '', city: '', notes: '' });
+  const [error, setError] = useState('');
+  const load = () => api<ClientRecord[]>('/clients').then(setItems).catch(reason => setError(reason instanceof Error ? reason.message : 'Could not load clients.'));
+  useEffect(() => { void load(); }, []);
+  const submit = async (event: FormEvent) => { event.preventDefault(); setError(''); try { await api('/clients', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ full_name: form.fullName, email: form.email || null, phone: form.phone || null, city: form.city || null, professional_notes: form.notes || null }) }); setForm({ fullName: '', email: '', phone: '', city: '', notes: '' }); setShowForm(false); await load(); } catch (reason) { setError(reason instanceof Error ? reason.message : 'Could not create client.'); } };
+  return <div><div className="page-header-flex"><div><h1>Clients</h1><p className="text-muted">Practice records may link to registered client accounts by email.</p></div><button className="btn btn-primary" onClick={() => setShowForm(value => !value)}><Plus size={16} /> Add client</button></div>{error && <div className="auth-error">{error}</div>}{showForm && <form className="admin-card admin-provision-form" onSubmit={submit}><label>Full name<input required minLength={2} value={form.fullName} onChange={event => setForm({ ...form, fullName: event.target.value })} /></label><label>Email<input type="email" value={form.email} onChange={event => setForm({ ...form, email: event.target.value })} /></label><label>Phone<input value={form.phone} onChange={event => setForm({ ...form, phone: event.target.value })} /></label><label>City<input value={form.city} onChange={event => setForm({ ...form, city: event.target.value })} /></label><label>Professional notes<textarea value={form.notes} onChange={event => setForm({ ...form, notes: event.target.value })} /></label><button className="btn btn-primary">Create client record</button></form>}<section className="admin-card"><div className="admin-user-list">{items.filter(item => !item.archived_at).map(item => <div className="admin-user-row" key={item.id}><div className="admin-user-avatar"><UserRound size={18} /></div><div className="admin-user-copy"><strong>{item.full_name}</strong><span>{item.email || 'No email'} · {item.phone || 'No phone'} · {item.city || 'No city'}</span></div><span className={`admin-status ${item.linked_user_id ? 'status-active' : 'status-pending'}`}>{item.linked_user_id ? 'Linked account' : 'Internal record'}</span></div>)}{items.length === 0 && <p className="admin-empty">No client records.</p>}</div></section></div>;
+}

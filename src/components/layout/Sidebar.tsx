@@ -9,6 +9,7 @@ import {
   Newspaper, 
   Search, 
   Settings, 
+  Users,
   Scale,
   X,
   ChevronLeft,
@@ -39,12 +40,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const navItems: { id: string; label: string; icon: React.ComponentType<{ size?: number; className?: string }>; badge?: string; highlight?: string }[] = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'cases', label: 'My Cases', icon: Briefcase, badge: caseCount ? String(caseCount) : undefined },
+    { id: 'clients', label: 'Clients', icon: Users },
     { id: 'documents', label: 'Documents', icon: FileText },
     { id: 'hearings', label: 'Hearings', icon: Calendar },
     { id: 'lawyer', label: 'My Lawyer', icon: UserCheck },
     { id: 'ai-assistant', label: 'AI Legal Assistant', icon: Bot, highlight: 'AI' },
     { id: 'updates', label: 'Legal Updates', icon: Newspaper, highlight: 'NEW' },
-    { id: 'find-help', label: 'Find Legal Help', icon: Search },
+    { id: 'find-help', label: role === 'lawyer' ? 'Consultation Requests' : 'Find Legal Help', icon: Search },
     { id: 'settings', label: 'Settings', icon: Settings }
   ];
 
@@ -88,7 +90,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
         {/* Navigation Items */}
         <nav className="sidebar-nav">
-          {navItems.filter(item => role === 'client' || !['lawyer', 'find-help'].includes(item.id)).map((item) => {
+          {navItems.filter(item => role === 'lawyer' ? item.id !== 'lawyer' : item.id !== 'clients').map((item) => {
             const Icon = item.icon;
             const isActive = activeTab === item.id;
             return (

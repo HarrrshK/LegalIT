@@ -6,17 +6,31 @@
   "scripts": {
     "dev": "concurrently --kill-others --names API,WEB --prefix-colors yellow,cyan \"npm:api\" \"npm:client\"",
     "client": "vite",
-    "api": "node server/index.mjs",
-    "account:create": "node server/manage-accounts.mjs create",
-    "data:reset": "node server/manage-accounts.mjs reset",
+    "api": "node scripts/run-backend.mjs",
+    "account:create": "node scripts/manage.mjs create-user",
+    "data:reset": "node scripts/manage.mjs nuke-data --yes",
+    "legal:import": "node scripts/manage.mjs import-legal",
+    "news:import": "node scripts/manage.mjs import-news",
+    "data:backup": "node scripts/manage.mjs backup",
+    "data:restore": "node scripts/manage.mjs restore",
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "preview": "vite preview"
   },
   "dependencies": {
+    "@hookform/resolvers": "^5.9.1",
+    "@tailwindcss/vite": "^4.3.3",
+    "@tanstack/react-query": "^5.104.1",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
     "lucide-react": "^1.52.0",
     "react": "^19.2.8",
-    "react-dom": "^19.2.8"
+    "react-dom": "^19.2.8",
+    "react-hook-form": "^7.89.0",
+    "react-router-dom": "^7.18.4",
+    "tailwind-merge": "^3.7.0",
+    "tailwindcss": "^4.3.3",
+    "zod": "^4.6.5"
   },
   "devDependencies": {
     "@types/node": "^24.13.3",

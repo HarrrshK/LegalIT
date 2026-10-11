@@ -1,0 +1,22 @@
+[Unit]
+Description=LegalIt FastAPI service
+After=network.target
+
+[Service]
+Type=simple
+User=legalit
+Group=legalit
+WorkingDirectory=/opt/legalit/current
+EnvironmentFile=/etc/legalit/legalit.env
+ExecStartPre=/opt/legalit/current/.venv/bin/python -m alembic -c /opt/legalit/current/backend/alembic.ini upgrade head
+ExecStart=/opt/legalit/current/.venv/bin/python -m uvicorn app.main:app --app-dir backend --host 127.0.0.1 --port 8000 --proxy-headers --forwarded-allow-ips=127.0.0.1
+Restart=on-failure
+RestartSec=5
+PrivateTmp=true
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/legalit
+
+[Install]
+WantedBy=multi-user.target

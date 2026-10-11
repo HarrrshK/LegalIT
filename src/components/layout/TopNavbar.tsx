@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { 
   Search, 
   Bell, 
@@ -14,8 +14,10 @@ import {
   Calendar,
   FileText
 } from 'lucide-react';
-import { notifications as initialNotifications } from '../../data/emptyData';
-import type { NotificationItem, AuthUser } from '../../types';
+import type { AuthUser } from '../../types';
+import { api } from '../../lib/api';
+
+type StoredNotification = { id: string; kind: string; title: string; body: string; link: string | null; read_at: string | null; created_at: string };
 
 interface TopNavbarProps {
   onOpenMobileSidebar: () => void;
@@ -39,12 +41,15 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
 }) => {
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
-  const [notifications, setNotifications] = useState<NotificationItem[]>(initialNotifications);
+  const [notifications, setNotifications] = useState<StoredNotification[]>([]);
 
-  const unreadCount = notifications.filter(n => !n.read).length;
+  useEffect(() => { api<StoredNotification[]>('/notifications').then(setNotifications).catch(() => setNotifications([])); }, []);
 
-  const markAllAsRead = () => {
-    setNotifications(notifications.map(n => ({ ...n, read: true })));
+  const unreadCount = notifications.filter(n => !n.read_at).length;
+
+  const markAllAsRead = async () => {
+    await Promise.all(notifications.filter(item => !item.read_at).map(item => api(`/notifications/${item.id}/read`, { method: 'POST' }))).catch(() => undefined);
+    setNotifications(notifications.map(n => ({ ...n, read_at: n.read_at || new Date().toISOString() })));
   };
 
   return (
@@ -122,22 +127,25 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
                 {notifications.map((n) => (
                   <div 
                     key={n.id} 
-                    className={`notif-item ${!n.read ? 'unread' : ''}`}
+                    className={`notif-item ${!n.read_at ? 'unread' : ''}`}
                     onClick={() => {
-                      if (n.linkTab) setActiveTab(n.linkTab);
+                      if (n.link?.includes('/cases/')) setActiveTab('cases');
+                      else if (n.link?.includes('/consultations/')) setActiveTab('find-help');
+                      void api(`/notifications/${n.id}/read`, { method: 'POST' }).catch(() => undefined);
+                      setNotifications(current => current.map(item => item.id === n.id ? { ...item, read_at: new Date().toISOString() } : item));
                       setShowNotifications(false);
                     }}
                   >
                     <div className="notif-icon">
-                      {n.type === 'hearing' && <Calendar size={16} color="#D97706" />}
-                      {n.type === 'document' && <FileText size={16} color="#2563EB" />}
-                      {n.type === 'lawyer' && <User size={16} color="#059669" />}
-                      {n.type === 'update' && <ShieldCheck size={16} color="#7C3AED" />}
+                      {n.kind.includes('appointment') && <Calendar size={16} color="#D97706" />}
+                      {n.kind.includes('document') && <FileText size={16} color="#2563EB" />}
+                      {n.kind.includes('case') && <User size={16} color="#059669" />}
+                      {n.kind.includes('consultation') && <ShieldCheck size={16} color="#7C3AED" />}
                     </div>
                     <div className="notif-content">
                       <div className="notif-title">{n.title}</div>
-                      <div className="notif-message">{n.message}</div>
-                      <div className="notif-time">{n.timestamp}</div>
+                      <div className="notif-message">{n.body}</div>
+                      <div className="notif-time">{new Date(n.created_at).toLocaleString()}</div>
                     </div>
                   </div>
                 ))}

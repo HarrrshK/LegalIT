@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { Scale, ShieldCheck, UserRound, BriefcaseBusiness, ArrowRight, Sparkles } from 'lucide-react';
 import type { AuthUser, UserRole } from '../../types';
+import { api, authUser } from '../../lib/api';
 
 type AuthMode = 'login' | 'register';
 
@@ -22,20 +23,14 @@ export function AuthPage({ onAuthenticated }: AuthPageProps) {
     setBusy(true);
     setError('');
     try {
-      const response = await fetch(`/api/auth/${mode}`, {
+      const result = await api<{ user: Parameters<typeof authUser>[0] }>(`/auth/${mode}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ email, password, ...(mode === 'register' ? { fullName, role } : {}) }),
+        body: JSON.stringify(mode === 'register'
+          ? { email, password, full_name: fullName, role }
+          : { login: email, password }),
       });
-      const result = await response.json();
-      if (response.ok && result.pending) {
-        setError('Your legal professional account is awaiting administrator approval. You can sign in after your account is approved.');
-        setMode('login');
-        return;
-      }
-      if (!response.ok) throw new Error(result.error || 'Could not sign in.');
-      onAuthenticated(result.user as AuthUser);
+      onAuthenticated(authUser(result.user));
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : 'Could not connect to the server.');
     } finally {
@@ -78,7 +73,7 @@ export function AuthPage({ onAuthenticated }: AuthPageProps) {
           <form className="auth-form" onSubmit={submit}>
             {mode === 'register' && <label>Full name<input autoComplete="name" value={fullName} onChange={event => setFullName(event.target.value)} placeholder="Your name" required minLength={2} /></label>}
             <label>{mode === 'login' ? 'Email address or user ID' : 'Email address'}<input type={mode === 'login' ? 'text' : 'email'} inputMode="email" autoComplete={mode === 'login' ? 'username' : 'email'} value={email} onChange={event => setEmail(event.target.value)} placeholder={mode === 'login' ? 'you@example.com or CLT-…' : 'you@example.com'} required /></label>
-            <label>Password<input type="password" autoComplete={mode === 'login' ? 'current-password' : 'new-password'} value={password} onChange={event => setPassword(event.target.value)} placeholder={mode === 'login' ? 'Enter your password' : 'At least 10 characters'} required minLength={mode === 'login' ? 1 : 10} /></label>
+            <label>Password<input type="password" autoComplete={mode === 'login' ? 'current-password' : 'new-password'} value={password} onChange={event => setPassword(event.target.value)} placeholder={mode === 'login' ? 'Enter your password' : 'At least 12 characters'} required minLength={mode === 'login' ? 1 : 12} /></label>
             {error && <div className="auth-error" role="alert">{error}</div>}
             <button className="auth-submit" type="submit" disabled={busy}>{busy ? 'Please wait…' : mode === 'login' ? 'Sign in securely' : 'Create account'} {!busy && <ArrowRight size={17} />}</button>
           </form>

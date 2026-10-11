@@ -1,0 +1,1 @@
+"""LegalIt backend application package."""

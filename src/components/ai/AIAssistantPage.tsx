@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { 
   Bot, 
   Send, 
@@ -13,6 +13,7 @@ import {
   ArrowRight
 } from 'lucide-react';
 import type { AIChatMessage } from '../../types';
+import { api } from '../../lib/api';
 
 interface AIAssistantPageProps {
   initialQuery?: string;
@@ -33,17 +34,10 @@ export const AIAssistantPage: React.FC<AIAssistantPageProps> = ({
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (initialQuery) {
-      handleSendMessage(initialQuery);
-    }
-  }, [initialQuery]);
-
-  useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isAnalyzing]);
 
-  const handleSendMessage = async (textToSend?: string) => {
-    const query = textToSend || inputQuery;
+  const handleSendMessage = useCallback(async (query: string) => {
     if (!query.trim()) return;
 
     const userMsg: AIChatMessage = {
@@ -54,19 +48,25 @@ export const AIAssistantPage: React.FC<AIAssistantPageProps> = ({
     };
 
     setMessages(prev => [...prev, userMsg]);
-    if (!textToSend) setInputQuery('');
+    setInputQuery('');
     setIsAnalyzing(true);
 
     try {
-      const response = await fetch('/api/ai/chat', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message: query }) });
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.error || 'The assistant could not answer.');
-      const assistantMsg: AIChatMessage = { id: `ai-${Date.now()}`, sender: 'assistant', timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), text: result.answer };
+      const result = await api<{ answer: string; citations: { title: string; source_url: string; excerpt: string }[] }>('/research/ask', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ question: query, jurisdiction: 'India' }) });
+      const references = result.citations.length ? `\n\nSources:\n${result.citations.map(item => `• ${item.title}: ${item.source_url}`).join('\n')}` : '';
+      const assistantMsg: AIChatMessage = { id: `ai-${Date.now()}`, sender: 'assistant', timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), text: `${result.answer}${references}` };
       setMessages(prev => [...prev, assistantMsg]);
     } catch (reason) {
       setMessages(prev => [...prev, { id: `ai-${Date.now()}`, sender: 'assistant', timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), text: reason instanceof Error ? reason.message : 'The assistant could not answer. Please try again.' }]);
     } finally { setIsAnalyzing(false); }
-  };
+  }, []);
+
+  useEffect(() => {
+    if (initialQuery) {
+      const timer = window.setTimeout(() => void handleSendMessage(initialQuery), 0);
+      return () => window.clearTimeout(timer);
+    }
+  }, [initialQuery, handleSendMessage]);
 
   const copyText = (id: string, text: string) => {
     navigator.clipboard.writeText(text);
@@ -252,7 +252,7 @@ export const AIAssistantPage: React.FC<AIAssistantPageProps> = ({
         <form 
           onSubmit={(e) => {
             e.preventDefault();
-            handleSendMessage();
+            void handleSendMessage(inputQuery);
           }}
           className="chat-input-form"
         >
