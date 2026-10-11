@@ -6,7 +6,7 @@ from sqlalchemy import or_, select
 from sqlalchemy.orm import Session
 
 from app.api.dependencies import current_user, get_db, require_role
-from app.models.core import Case, CaseParticipant, User, UserRole
+from app.models.core import AccountStatus, Case, CaseParticipant, User, UserRole
 from app.models.domain import CaseNote, CaseTask, Notification
 from app.schemas.domain import (
     CaseCreate,
@@ -53,7 +53,7 @@ def client_case_intake(
     session: Session = Depends(get_db),
 ):
     lawyer = session.get(User, payload.lawyer_user_id)
-    if lawyer is None or lawyer.role != UserRole.LAWYER:
+    if lawyer is None or lawyer.role != UserRole.LAWYER or lawyer.status != AccountStatus.ACTIVE:
         raise HTTPException(status_code=404, detail="Lawyer not found")
     case = Case(
         reference=f"LIT-{datetime.now(timezone.utc):%Y}-{secrets.token_hex(3).upper()}",

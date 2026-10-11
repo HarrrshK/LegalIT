@@ -17,6 +17,7 @@ All new endpoints use `/api/v1`. OpenAPI is available at `/api/v1/docs` in envir
 | POST | `/api/v1/admin/lawyer-verifications/{id}/review` | Admin | Approve, reject, or request changes |
 | GET/PATCH | `/api/v1/profiles/me*` | Client/Lawyer | Read or update the current profile |
 | GET | `/api/v1/lawyers` | Public | Search approved visible lawyers |
+| GET | `/api/v1/lawyers/options` | Authenticated | List active registered lawyers for case and consultation selection, with verification status |
 | GET/POST/PATCH | `/api/v1/consultations*` | Participant/Admin | Consultation workflow |
 | GET/POST/PATCH | `/api/v1/cases*` | Case member/Lawyer | Case intake and management |
 | GET/POST | `/api/v1/cases/{id}/notes` | Case member/Lawyer | Shared or internal notes |

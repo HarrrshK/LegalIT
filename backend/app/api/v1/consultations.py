@@ -5,7 +5,7 @@ from sqlalchemy import or_, select
 from sqlalchemy.orm import Session
 
 from app.api.dependencies import current_user, get_db, require_role
-from app.models.core import LawyerProfile, LawyerVerification, User, UserRole, VerificationStatus
+from app.models.core import AccountStatus, LawyerProfile, User, UserRole
 from app.models.domain import ConsultationRequest, ConsultationStatus, ConsultationStatusEvent, Notification
 from app.schemas.domain import ConsultationCreate, ConsultationDecision, ConsultationResponse
 
@@ -51,19 +51,12 @@ def create_consultation(
 ):
     lawyer = session.get(User, payload.lawyer_user_id)
     profile = session.get(LawyerProfile, payload.lawyer_user_id)
-    verification = session.scalar(
-        select(LawyerVerification).where(
-            LawyerVerification.lawyer_user_id == payload.lawyer_user_id,
-            LawyerVerification.status == VerificationStatus.APPROVED,
-        )
-    )
     if (
         lawyer is None
         or lawyer.role != UserRole.LAWYER
+        or lawyer.status != AccountStatus.ACTIVE
         or profile is None
-        or not profile.profile_visible
         or not profile.accepting_consultations
-        or verification is None
     ):
         raise HTTPException(status_code=404, detail="Available lawyer not found")
     now = datetime.now(timezone.utc)

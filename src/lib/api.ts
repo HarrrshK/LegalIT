@@ -82,6 +82,7 @@ type ApiLawyer = {
   bio: string | null;
   languages: string[];
   practice_areas: string[];
+  verified: boolean;
 };
 
 export function lawyer(value: ApiLawyer): Lawyer {
@@ -95,5 +96,6 @@ export function lawyer(value: ApiLawyer): Lawyer {
     courtPractice: value.languages,
     location: value.city || 'Not specified',
     bio: value.bio || '',
+    verified: value.verified,
   };
 }

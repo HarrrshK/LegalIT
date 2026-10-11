@@ -94,6 +94,29 @@ def nuke_data(args: argparse.Namespace) -> int:
     return 0
 
 
+def nuke_except_admin(args: argparse.Namespace) -> int:
+    if not args.yes:
+        print("Refusing to erase non-admin data without --yes.")
+        return 2
+    settings = get_settings()
+    engine = build_engine(settings)
+    with engine.begin() as connection:
+        for table in reversed(Base.metadata.sorted_tables):
+            if table.name != "users":
+                connection.execute(delete(table))
+        connection.execute(delete(User).where(User.role != UserRole.ADMIN))
+    engine.dispose()
+    upload_dir = Path(settings.upload_dir)
+    if upload_dir.exists():
+        for child in upload_dir.iterdir():
+            if child.is_dir():
+                shutil.rmtree(child)
+            else:
+                child.unlink()
+    print("Erased all non-admin accounts and all application data/uploads. Administrator accounts were preserved.")
+    return 0
+
+
 def import_legal(args: argparse.Namespace) -> int:
     path = Path(args.file)
     try:
@@ -289,6 +312,9 @@ def parser() -> argparse.ArgumentParser:
     nuke = commands.add_parser("nuke-data", help="Erase every local record and uploaded file")
     nuke.add_argument("--yes", action="store_true", help="Confirm irreversible erasure")
     nuke.set_defaults(handler=nuke_data)
+    keep_admin = commands.add_parser("nuke-except-admin", help="Erase all data while preserving administrator accounts")
+    keep_admin.add_argument("--yes", action="store_true", help="Confirm irreversible erasure")
+    keep_admin.set_defaults(handler=nuke_except_admin)
     ingest = commands.add_parser("import-legal", help="Import permitted legal documents from a JSON file")
     ingest.add_argument("file")
     ingest.set_defaults(handler=import_legal)

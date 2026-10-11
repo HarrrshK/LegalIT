@@ -101,7 +101,7 @@ export function App() {
   useEffect(() => { api<{ user: Parameters<typeof mapAuthUser>[0] }>('/auth/me').then(result => { const mapped = mapAuthUser(result.user); setAuthUser(mapped); if (window.location.pathname === '/login') navigate(`/${mapped.role}/dashboard`, { replace: true }); }).catch(() => undefined).finally(() => setAuthLoading(false)); }, [navigate]);
   const loadWorkspace = () => Promise.all([
     api<Parameters<typeof legalCase>[0][]>('/cases'),
-    api<Parameters<typeof lawyer>[0][]>('/lawyers'),
+    api<Parameters<typeof lawyer>[0][]>('/lawyers/options'),
   ]).then(([storedCases, storedLawyers]) => { setCases(storedCases.map(legalCase)); setLawyers(storedLawyers.map(lawyer)); }).catch(() => { setCases([]); setLawyers([]); });
   useEffect(() => { if (!authUser || authUser.role === 'admin') return; void loadWorkspace(); }, [authUser]);
   const handleSignOut = async () => { await api('/auth/logout', { method: 'POST' }).catch(() => undefined); setCases([]); setLawyers([]); setAuthUser(null); navigate('/login'); };
@@ -114,6 +114,7 @@ export function App() {
   const handleNavigateTab = (tab: string, caseId?: string) => {
     setActiveTab(tab);
     navigate(`/${authUser.role}/${tab === 'ai-assistant' ? 'research' : tab}`);
+    if (tab === 'find-help' || tab === 'cases') void loadWorkspace();
     if (caseId) {
       setTargetCaseId(caseId);
     }

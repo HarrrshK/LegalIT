@@ -3,6 +3,7 @@
 LegalIt is a role-aware Indian legal operations platform built with React, TypeScript, FastAPI, SQLAlchemy, Alembic, and SQLite. It provides client, lawyer, and administrator interfaces, private case collaboration, lawyer verification, legal search, and a Groq-backed retrieval assistant.
 
 No demo users, lawyers, cases, legal sources, or news are created automatically.
+The backend does not depend on PyYAML; Uvicorn is configured through command-line arguments.
 
 ## Windows setup
 
@@ -43,6 +44,9 @@ npm run account:create -- --role admin --name "Platform Admin" --email "admin@ex
 # Deliberately erase every SQLite record and uploaded file
 npm run data:reset
 
+# Erase all data and uploads while preserving administrator accounts
+npm run data:nuke-keep-admin
+
 # Import reviewed legal documents from the format documented in AI_SYSTEM.md
 npm run legal:import -- path/to/legal-documents.json
 npm run news:import -- path/to/legal-news.json
@@ -51,6 +55,11 @@ npm run news:import -- path/to/legal-news.json
 npm run data:backup -- --output backups/legalit.zip
 npm run data:restore -- backups/legalit.zip --yes
 ```
+
+Stop the API before either erase command. `data:nuke-keep-admin` preserves only
+administrator user accounts; it removes their sessions along with every other
+account, case, legal source, audit entry, and uploaded file, so administrators
+must sign in again afterward.
 
 ## Verification
 

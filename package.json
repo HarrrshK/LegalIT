@@ -9,6 +9,7 @@
     "api": "node scripts/run-backend.mjs",
     "account:create": "node scripts/manage.mjs create-user",
     "data:reset": "node scripts/manage.mjs nuke-data --yes",
+    "data:nuke-keep-admin": "node scripts/manage.mjs nuke-except-admin --yes",
     "legal:import": "node scripts/manage.mjs import-legal",
     "news:import": "node scripts/manage.mjs import-news",
     "data:backup": "node scripts/manage.mjs backup",
