@@ -75,6 +75,7 @@ export interface Lawyer {
   availableSlots?: string[];
   isAssigned?: boolean;
   verified?: boolean;
+  acceptingConsultations?: boolean;
 }
 
 export interface LegalCase {

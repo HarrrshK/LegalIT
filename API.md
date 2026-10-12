@@ -33,3 +33,5 @@ All new endpoints use `/api/v1`. OpenAPI is available at `/api/v1/docs` in envir
 | GET/PATCH/POST | `/api/v1/admin/*` | Admin | Metrics, accounts, cases, audit, verification |
 
 Public registration accepts only client and lawyer roles. Administrator accounts are created from the local management command. The unversioned routes in `server/index.mjs` are legacy and scheduled for replacement.
+
+`PATCH /api/v1/consultations/{id}/complete` marks an accepted or scheduled consultation completed. Only its assigned lawyer may call it; status history and a client notification are persisted.

@@ -25,7 +25,13 @@ export function authUser(value: ApiUser): AuthUser {
 export async function api<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(`/api/v1${path}`, { credentials: 'include', ...init });
   const body = response.status === 204 ? null : await response.json().catch(() => null);
-  if (!response.ok) throw new Error(body?.detail || 'The request could not be completed.');
+  if (!response.ok) {
+    const detail = body?.detail;
+    const message = Array.isArray(detail)
+      ? detail.map((item: { loc?: string[]; msg?: string }) => `${item.loc?.slice(1).join('.') || 'Input'}: ${item.msg || 'Invalid value'}`).join('; ')
+      : typeof detail === 'string' ? detail : 'The request could not be completed. Please try again.';
+    throw new Error(message);
+  }
   return body as T;
 }
 
@@ -83,6 +89,7 @@ type ApiLawyer = {
   languages: string[];
   practice_areas: string[];
   verified: boolean;
+  accepting_consultations: boolean;
 };
 
 export function lawyer(value: ApiLawyer): Lawyer {
@@ -97,5 +104,6 @@ export function lawyer(value: ApiLawyer): Lawyer {
     location: value.city || 'Not specified',
     bio: value.bio || '',
     verified: value.verified,
+    acceptingConsultations: value.accepting_consultations,
   };
 }

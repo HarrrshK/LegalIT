@@ -1,0 +1,30 @@
+.directory-workspace { display: grid; gap: 28px; }
+.directory-workspace .page-header, .directory-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.directory-eyebrow { color: var(--text-muted); font-size: 11px; font-weight: 700; letter-spacing: .14em; }
+.directory-workspace h1 { margin: 6px 0; }
+.consultation-metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.consultation-metrics .card { padding: 20px; display: grid; gap: 8px; }
+.consultation-metrics span { color: var(--text-secondary); font-size: 13px; }
+.consultation-metrics strong { font-size: 28px; }
+.directory-toolbar { margin-bottom: 18px; }
+.directory-search { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 220px; }
+.directory-checkbox { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+.directory-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 290px), 1fr)); gap: 18px; }
+.professional-card { padding: 24px; display: flex; flex-direction: column; gap: 14px; }
+.professional-card > .btn { margin-top: auto; }
+.professional-heading { display: flex; align-items: center; gap: 12px; }
+.professional-avatar { width: 46px; height: 46px; border-radius: 14px; display: grid; place-items: center; background: #edf2f9; color: #1e3a5f; font-weight: 700; flex-shrink: 0; }
+.verification-label { display: inline-flex; gap: 5px; align-items: center; font-size: 12px; color: var(--text-muted); }
+.verification-label.is-verified { color: #168064; }
+.professional-location { display: flex; align-items: center; gap: 7px; font-size: 13px; }
+.professional-tags, .consultation-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.directory-empty { display: grid; justify-items: center; text-align: center; gap: 12px; padding: 36px; }
+.consultation-card { padding: 24px; margin-bottom: 16px; display: grid; gap: 16px; }
+.consultation-card .directory-toolbar { margin: 0; }
+.consultation-description { white-space: pre-wrap; overflow-wrap: anywhere; }
+.consultation-card blockquote { border-left: 3px solid #168064; padding: 10px 16px; color: var(--text-secondary); }
+.consultation-response { display: grid; gap: 12px; }
+.consultation-response label { display: grid; gap: 6px; font-size: 13px; }
+.consultation-card > button { justify-self: start; }
+:where(button, a, input, select, textarea):focus-visible { outline: 2px solid #3b82f6; outline-offset: 3px; }
+@media (max-width: 600px) { .consultation-metrics { gap: 8px; } .consultation-metrics .card { padding: 12px; } .consultation-metrics strong { font-size: 23px; } .professional-card, .consultation-card { padding: 18px; } }

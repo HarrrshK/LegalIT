@@ -1,6 +1,6 @@
 # Project Status
 
-Updated: 2026-10-11
+Updated: 2026-10-12
 
 ## Current milestone
 
@@ -25,7 +25,7 @@ Milestone 8 — Hardening (in progress). Milestones 0–6 have functional founda
 
 ## Incomplete
 
-- The admin source/ingestion endpoints and account suspension API still need dedicated controls in the admin page.
+- The admin source/ingestion endpoints still need dedicated controls in the admin page. Account search and suspension/restoration controls are implemented.
 - Password recovery and email verification require an email provider and are not active.
 - Legal/news data must be imported from reviewed, permitted real sources; the repository intentionally contains no fabricated records.
 - Rate limits are process-local and need a shared implementation before multi-process deployment.
@@ -42,7 +42,7 @@ Revisions `2d0dbe6e94d9` and `56cf859679d6` pass isolated upgrade and downgrade 
 
 ## Verified results
 
-- `PYTHONPATH=backend .venv/bin/pytest backend/tests -q` — 12 passed.
+- `PYTHONPATH=backend .venv/bin/pytest backend/tests -q` — 13 passed.
 - `npm run lint` — passed without warnings.
 - `npm run build` — passed.
 - Alembic upgrade and downgrade — passed on isolated SQLite.
@@ -57,4 +57,13 @@ Email verification/recovery and malware scanning are not configured. The rate li
 
 ## Exact next action
 
-Add admin source/ingestion and suspension controls, expand HTTP authorization and upload-limit tests, perform an accessibility pass, and finish Milestone 8 before production deployment verification.
+Add admin source/ingestion controls, expand HTTP authorization and upload-limit tests, perform an accessibility pass, and finish Milestone 8 before production deployment verification.
+
+## Latest usability and workflow fixes
+
+- Directory cards and responsive request workspace with verified-only and text filters, availability labels, request status filters, real metrics, lawyer replies, optional scheduling, cancellation, and completion.
+- Admin account search and suspension/restoration controls; removed unused legacy workspace components.
+- Workspace load failures now show a retry control instead of clearing real data. Validation errors now show readable field messages.
+- Consultation notification paths render the request workspace; AI shortcuts update the URL; mandatory password changes also apply before the admin workspace renders.
+- Suspended professionals no longer appear in the public directory. Terminal consultations cannot be cancelled; completion requires the assigned lawyer and an accepted/scheduled state.
+- Browser interaction/accessibility review and actual hosting verification remain outstanding. No claim that every outstanding milestone is finished.

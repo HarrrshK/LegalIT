@@ -127,10 +127,35 @@ def cancel_consultation(
     consultation = session.get(ConsultationRequest, consultation_id)
     if consultation is None or user.id not in {consultation.client_user_id, consultation.lawyer_user_id}:
         raise HTTPException(status_code=404, detail="Consultation not found")
-    if consultation.status in {ConsultationStatus.COMPLETED.value, ConsultationStatus.CANCELLED.value}:
+    if consultation.status not in {ConsultationStatus.SUBMITTED.value, ConsultationStatus.ACCEPTED.value, ConsultationStatus.SCHEDULED.value}:
         raise HTTPException(status_code=409, detail="Consultation cannot be cancelled")
     previous = consultation.status
     consultation.status = ConsultationStatus.CANCELLED.value
     record_event(session, consultation, user, previous)
+    session.commit()
+    return consultation
+
+
+@router.patch("/{consultation_id}/complete", response_model=ConsultationResponse)
+def complete_consultation(
+    consultation_id: str,
+    lawyer: User = Depends(require_role(UserRole.LAWYER)),
+    session: Session = Depends(get_db),
+):
+    consultation = session.get(ConsultationRequest, consultation_id)
+    if consultation is None or consultation.lawyer_user_id != lawyer.id:
+        raise HTTPException(status_code=404, detail="Consultation not found")
+    if consultation.status not in {ConsultationStatus.ACCEPTED.value, ConsultationStatus.SCHEDULED.value}:
+        raise HTTPException(status_code=409, detail="Only accepted or scheduled consultations can be completed")
+    previous = consultation.status
+    consultation.status = ConsultationStatus.COMPLETED.value
+    record_event(session, consultation, lawyer, previous)
+    session.add(Notification(
+        user_id=consultation.client_user_id,
+        kind="consultation_completed",
+        title="Consultation completed",
+        body=f"Your consultation about {consultation.subject} has been marked completed.",
+        link=f"/client/consultations/{consultation.id}",
+    ))
     session.commit()
     return consultation

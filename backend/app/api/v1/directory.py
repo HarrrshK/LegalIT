@@ -60,6 +60,7 @@ def list_lawyers(
         .join(LawyerVerification, LawyerVerification.lawyer_user_id == User.id)
         .where(
             User.role == UserRole.LAWYER,
+            User.status == AccountStatus.ACTIVE,
             LawyerProfile.profile_visible.is_(True),
             LawyerVerification.status == VerificationStatus.APPROVED,
         )
